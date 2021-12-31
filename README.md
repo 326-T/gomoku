@@ -4,9 +4,9 @@
 - [x] 五目並べ
 - [ ] オセロ
 - [ ] 対戦機能
-- [x] DQNモドキ
-  - リプレイあり
-  - target networkなし
-- [ ] DQN
+- [x] DQN
+  - [x] Experience replay
+  - [ ] fixed target q-network
+  - [ ] reward clipping
 - [ ] DDQN
 - [ ] APE_X
