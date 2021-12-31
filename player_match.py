@@ -13,7 +13,7 @@ import numpy as np
 
 from modules.model import FCNN, FCNN_controller
 from modules.env import Gomoku, Observer
-from modules.agent import FNAgent
+from modules.agent import DNAgent, FNAgent
 
 
 # In[3]:
@@ -78,9 +78,9 @@ class Refree:
 def init_refree():
     env = Observer.load(Gomoku(3))
     fcnn = FCNN(env.dim_state+1, env.dim_action)
-    fcnn_controller = FCNN_controller(fcnn)
-    fcnn_controller.load_weight("data/fna/9_model_fcnn")
-    agent = FNAgent.load(fcnn_controller, 0)
+    model = FCNN_controller(fcnn)
+    model.load_weight("data/dnn/1_model_fcnn")
+    agent = DNAgent.load(model, None, 0)
     
     refree = Refree.load(env, agent)
     refree.reset()
@@ -102,14 +102,16 @@ app = Flask(__name__)
 @app.route("/", methods=["GET"])
 def root_get():
     refree.reset()
-    return render_template("index.html", state=refree.env.state().reshape(3, 3).tolist(), options=refree.options.tolist(), result=refree.result)
+    return render_template("index.html", state=refree.env.state().reshape(3, 3).tolist(), options=refree.options.tolist(), 
+    order=refree.player_ids["player"], result=refree.result)
 
 @app.route("/", methods=["POST"])
 def root_post():
     action = int(request.form.get("action"))
     refree.player_turn(action)
     refree.agent_turn()
-    return render_template("index.html", state=refree.env.state().reshape(3, 3).tolist(), options=refree.options.tolist(), result=refree.result)
+    return render_template("index.html", state=refree.env.state().reshape(3, 3).tolist(), options=refree.options.tolist(), 
+    order=refree.player_ids["player"], result=refree.result)
     
 
 

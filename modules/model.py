@@ -4,6 +4,7 @@
 # In[1]:
 
 
+from typing import Generator
 import numpy as np
 import torch
 from torch import nn, optim
@@ -17,7 +18,7 @@ from torchvision import transforms
 
 class FCNN(nn.Module):
     
-    def __init__(self, input_shape, output_shape, hidden_shape=[20, 20]):
+    def __init__(self, input_shape, output_shape, hidden_shape=[30, 30]):
         super(FCNN, self).__init__()
         
         self.input_shape = input_shape
@@ -101,4 +102,3 @@ class GomokuDataset(Dataset):
     
     def __getitem__(self, idx):
         return self.x[idx], self.y[idx]
-
