@@ -24,6 +24,7 @@ class FNAgent():
         self.nn_controller = None
         self.estimate_probs = False
         self.initialized = False
+        self.color = 1
 
     @classmethod
     def load(cls, model, epsilon=0.1):
@@ -62,26 +63,4 @@ class FNAgent():
     def _choice_from_options(self, estimates, options):
         index = np.argmax(estimates[options])
         return options[index]
-
-
-# In[9]:
-
-
-class Player():
-    
-    def __init__(self, size):
-        self.size = size
-    
-    def policy(self, state=None, options=None):
-        print("どこに打ちますか？")
-        action = input("x, y >> ")
-        action = action.split(",")
-        x, y = int(action[0]), int(action[1])
-        return x + y * self.size
-
-
-# In[ ]:
-
-
-
 
