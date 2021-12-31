@@ -72,15 +72,15 @@ class Refree:
             self.result = "引き分け"
 
 
-# In[6]:
+# In[4]:
 
 
 def init_refree():
     env = Observer.load(Gomoku(3))
-    fcnn = FCNN(env.dim_state, env.dim_action)
+    fcnn = FCNN(env.dim_state+1, env.dim_action)
     fcnn_controller = FCNN_controller(fcnn)
-    fcnn_controller.load_weight("data/fna/more_model_fcnn")
-    agent = FNAgent.load(fcnn_controller)
+    fcnn_controller.load_weight("data/fna/9_model_fcnn")
+    agent = FNAgent.load(fcnn_controller, 0)
     
     refree = Refree.load(env, agent)
     refree.reset()
@@ -88,13 +88,13 @@ def init_refree():
     return refree
 
 
-# In[7]:
+# In[5]:
 
 
 refree = init_refree()
 
 
-# In[8]:
+# In[6]:
 
 
 app = Flask(__name__)

@@ -107,10 +107,6 @@ class Observer():
     def options(self):
         return np.where(self._env.state.reshape(-1) == 0)[0]
 
-
-    def relative_state(self, player):
-        return self._env.state.reshape(-1) * player
-    
     def state(self):
         return self._env.state.reshape(-1)    
     
@@ -122,14 +118,14 @@ class Observer():
     
     def reset(self):
         self._env.reset()
-        return self.relative_state(1), self.options()
+        return self.state(), self.options()
 
     def render(self):
         self._env.render()
 
     def step(self, player, action):
         self._env.step(player, action % self._env.size, action // self._env.size)
-        return self.relative_state(player), self.reward(player), self.done(), self.options()   
+        return self.state(), self.reward(player), self.done(), self.options()   
 
 
 # In[ ]:
