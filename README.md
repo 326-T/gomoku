@@ -7,6 +7,6 @@
 - [x] DQN
   - [x] Experience replay
   - [ ] fixed target q-network
-  - [ ] reward clipping
+  - [x] reward clipping
 - [ ] DDQN
 - [ ] APE_X
