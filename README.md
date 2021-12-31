@@ -8,6 +8,7 @@
   - [x] Experience replay
   - [x] fixed target q-network
   - [x] reward clipping
+  - [ ] 行動価値関数
 - [ ] DDQN
 - [ ] APE_X
 
