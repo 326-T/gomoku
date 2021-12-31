@@ -6,7 +6,7 @@
 - [x] 対戦機能
 - [x] DQN
   - [x] Experience replay
-  - [ ] fixed target q-network
+  - [x] fixed target q-network
   - [x] reward clipping
 - [ ] DDQN
 - [ ] APE_X
