@@ -62,15 +62,22 @@ class Trainer():
             
             # 先攻か後攻か
             if np.random.random() < 0.5:
+                agent.color = -1
+                opponent.color = 1
                 opponent_action = opponent.policy(state, options)
-                state, reward, done, options = env.step(-1, opponent_action)
+                state, reward, done, options = env.step(opponent.color, opponent_action)
+                
+            else:
+                agent.color = 1
+                opponent.color = -1
             
             while not done:
                 action = agent.policy(state, options)
-                next_state, reward, done, next_options = env.step(1, action)
+                next_state, reward, done, next_options = env.step(agent.color, action)
                 if not done:
                     opponent_action = opponent.policy(next_state, next_options)
-                    next_state, reward, done, next_options = env.step(-1, opponent_action)
+                    next_state, reward, done, next_options = env.step(opponent.color, opponent_action)
+                reward = env.reward(agent.color)
                 
                 e = Experience(state, action, reward, next_state, done)
                 self.experiences.append(e)
@@ -119,7 +126,7 @@ class Logger():
 def train():
     env = Observer.load(Gomoku(3))
     trainer = Trainer()
-    fcnn_controller = FCNN_controller(FCNN(env.dim_state, env.dim_action))
+    fcnn_controller = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
     agent = FNAgent.load(fcnn_controller)
     opponent = FNAgent(0)
     trainer.train_loop(env, agent, opponent, export_model_path="data/fna/0_model_fcnn", export_log_path="data/fna/0_reward_loss.png")
@@ -132,11 +139,11 @@ def train_more(generation=1):
     env = Observer.load(Gomoku(3))
     trainer = Trainer()
     
-    agent_fcnn_controller = FCNN_controller(FCNN(env.dim_state, env.dim_action))
+    agent_fcnn_controller = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
     agent_fcnn_controller.load_weight("data/fna/"+str(i)+"_model_fcnn")
     agent = FNAgent.load(agent_fcnn_controller)
     
-    opponent_fcnn_controller = FCNN_controller(FCNN(env.dim_state, env.dim_action))
+    opponent_fcnn_controller = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
     opponent_fcnn_controller.load_weight("data/fna/"+str(i)+"_model_fcnn")
     opponent = FNAgent.load(opponent_fcnn_controller)
     

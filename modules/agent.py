@@ -13,7 +13,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-# In[6]:
+# In[2]:
 
 
 class FNAgent():
@@ -34,7 +34,8 @@ class FNAgent():
         return agent
 
     def estimate(self, state):
-        return self.model.predict(state).detach().numpy()
+        x = self._append_color(state)
+        return self.model.predict(x).detach().numpy()
         
     def policy(self, state, options):
         if np.random.random() < self.epsilon or not self.initialized:
@@ -57,10 +58,23 @@ class FNAgent():
             estimateds[i][e.a] = reward
 
         estimateds = np.array(estimateds)
-        loss = self.model.train(states , estimateds, batch_size, epoch)
+        x = self._append_color(states)
+        loss = self.model.train(x , estimateds, batch_size, epoch)
         return loss
     
     def _choice_from_options(self, estimates, options):
         index = np.argmax(estimates[options])
         return options[index]
+    
+    def _append_color(self, state):
+        if state.ndim == 1:
+            return np.block([state, self.color])
+        else:
+            return np.block([state, np.ones([state.shape[0], 1]) * self.color])
+
+
+# In[ ]:
+
+
+
 
