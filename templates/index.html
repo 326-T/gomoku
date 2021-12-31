@@ -5,7 +5,7 @@
 </head>
 <body>
   <div id="container">
-    <h1 class="title">五目並べ</h1>
+    <h1 class="title" style="padding-top: 2rem;">五目並べ</h1>
     <div id="field">
       <div class="base">
         <table>
@@ -34,11 +34,9 @@
   var $tableElements = document.getElementsByTagName('td');
   var state = {{ state | tojson}};
   var options = {{ options | tojson}};
-  var result = {{ result | tojson}};
-  var results = { "win": 0, "lose": 0, "drow": 0}
+  var order = {{ order | tojson}};
 
   window.onload = () => {
-    addResult(result);
     for (let $i=0; $i < $tableElements.length; $i++) {
       $tableElements[$i].addEventListener('click', async (e) => {
         let tableElements = [].slice.call($tableElements);
@@ -47,6 +45,7 @@
           window.alert("そこには置けません");
           return;
         }
+        putStone(index, order)
         postAction(index)
       })
       putStone($i, state[Math.trunc($i / state.length)][$i % state.length]);
@@ -82,23 +81,5 @@
     document.body.appendChild(form);
  
     form.submit();
-  }
-
-  function addResult(result) {
-    var saved = localStorage.getItem('results');
-    if(saved) {
-      results = JSON.parse(saved)
-    }
-    if (result==='勝ち') {
-      results.win++   
-    }
-    else if (result==='負け') {
-      results.lose++   
-    }
-    else if (result==='引き分け') {
-      results.drow++   
-    }
-    localStorage.setItem('results', JSON.stringify(results))
-
   }
 </script>
