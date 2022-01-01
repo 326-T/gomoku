@@ -16,28 +16,18 @@ import matplotlib.pyplot as plt
 # In[2]:
 
 
-from model import FCNN, FCNN_controller
+from modules.model import FCNN, FCNN_controller
+from modules.env import Gomoku, Observer
+from modules.agent import DNAgent, FNAgent
 
 
 # In[3]:
 
 
-from env import Gomoku, Observer
-
-
-# In[4]:
-
-
-from agent import FNAgent
-
-
-# In[5]:
-
-
 Experience = namedtuple("Experience", ["s", "a", "r", "n_s", "d"])
 
 
-# In[6]:
+# In[4]:
 
 
 class Trainer():
@@ -72,15 +62,22 @@ class Trainer():
             
             # 先攻か後攻か
             if np.random.random() < 0.5:
+                agent.color = -1
+                opponent.color = 1
                 opponent_action = opponent.policy(state, options)
-                state, reward, done, options = env.step(-1, opponent_action)
+                state, reward, done, options = env.step(opponent.color, opponent_action)
+                
+            else:
+                agent.color = 1
+                opponent.color = -1
             
             while not done:
                 action = agent.policy(state, options)
-                next_state, reward, done, next_options = env.step(1, action)
+                next_state, reward, done, next_options = env.step(agent.color, action)
                 if not done:
                     opponent_action = opponent.policy(next_state, next_options)
-                    next_state, reward, done, next_options = env.step(-1, opponent_action)
+                    next_state, reward, done, next_options = env.step(opponent.color, opponent_action)
+                reward = env.reward(agent.color)
                 
                 e = Experience(state, action, reward, next_state, done)
                 self.experiences.append(e)
@@ -91,28 +88,25 @@ class Trainer():
                     loss = agent.replay(self.experiences, self.gamma, self.batch_size, self.epoch)
                     self.logger.loss.append(loss)
                     self.training_count = 0
-            if i % 5000 == 0:
-                env.render()
+            # if i % 5000 == 0:
+            #     env.render()
             self.logger.reward.append(reward)
-        agent.model.save_weight()
-        self.logger.render()
 
 
-# In[7]:
+# In[5]:
 
 
 class Logger():
 
-    def __init__(self, path="data/reward_loss.png"):
+    def __init__(self):
         self.loss = []
         self.reward = []
-        self.path = path
         
-    def render(self):
+    def render(self, path="data/reward_loss.png"):
         fig, axes = plt.subplots(1, 2, figsize=(12, 6))
         self._plot_loss(axes[0])
         self._plot_reward(axes[1])
-        plt.savefig(self.path)
+        plt.savefig(path)
         
     def _plot_loss(self, ax):
         ax.plot(range(len(self.loss)), self.loss)
@@ -124,23 +118,87 @@ class Logger():
         return np.convolve(x, np.ones(w), 'valid') / w
 
 
-# In[8]:
+# In[6]:
 
 
 def train():
     env = Observer.load(Gomoku(3))
     trainer = Trainer()
-    fcnn_controller = FCNN_controller(FCNN(env.dim_state, env.dim_action))
-    agent = FNAgent.load(fcnn_controller)
+    model = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
+    agent = FNAgent.load(model)
     opponent = FNAgent(0)
     trainer.train_loop(env, agent, opponent)
+    agent.model.save_weight("data/fna/0_model_fcnn")
+    trainer.logger.render("data/fna/0_reward_loss.png")
+
+
+# In[7]:
+
+
+def train_more(generation=1):
+    env = Observer.load(Gomoku(3))
+    trainer = Trainer()
+    
+    agent_model = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
+    agent_model.load_weight("data/fna/"+str(i)+"_model_fcnn")
+    agent = FNAgent.load(agent_model)
+    
+    opponent_model = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
+    opponent_model.load_weight("data/fna/"+str(i)+"_model_fcnn")
+    opponent = FNAgent.load(opponent_model)
+    
+    trainer.train_loop(env, agent, opponent)
+    
+    agent.model.save_weight("data/fna/"+str(i+1)+"_model_fcnn")
+    trainer.logger.render("data/fna/"+str(i+1)+"_reward_loss.png")
+
+
+# In[8]:
+
+
+def train_DNN():
+    env = Observer.load(Gomoku(3))
+    trainer = Trainer()
+    model = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
+    target = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
+    agent = DNAgent.load(model, target)
+    opponent = DNAgent(0)
+    trainer.train_loop(env, agent, opponent)
+    agent.model.save_weight("data/dnn/0_model_fcnn")
+    trainer.logger.render("data/dnn/0_reward_loss.png")
 
 
 # In[9]:
 
 
+def train_more_DNN(generation=1):
+    env = Observer.load(Gomoku(3))
+    trainer = Trainer()
+    
+    agent_model = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
+    agent_target = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
+    agent_model.load_weight("data/dnn/"+str(i)+"_model_fcnn")
+    agent_target.load_weight("data/dnn/"+str(i)+"_model_fcnn")
+    agent = DNAgent.load(agent_model, agent_target)
+    
+    opponent_model = FCNN_controller(FCNN(env.dim_state+1, env.dim_action))
+    opponent_model.load_weight("data/dnn/"+str(i)+"_model_fcnn")
+    opponent = DNAgent.load(opponent_model, None)
+    
+    trainer.train_loop(env, agent, opponent)
+    agent.model.save_weight("data/dnn/"+str(i+1)+"_model_fcnn")
+    trainer.logger.render("data/dnn/"+str(i+1)+"_reward_loss.png")
+
+
+# In[10]:
+
+
 if __name__ == "__main__":
     train()
+    train_DNN()
+    for i in range(10):
+        train_more(i)
+        train_more_DNN(i)
 
 
 # In[ ]:

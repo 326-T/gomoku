@@ -51,16 +51,19 @@ class Gomoku:
             self.reward[1] = 1
             self.reward[-1] = -1
             self.done = True
+            return
             
         if opponent_score == self.size:
             self.reward[1] = -1
             self.reward[-1] = 1
             self.done = True
+            return
             
         if not self._continue():
             self.reward[1] = -0.3
             self.reward[-1] = -0.3
             self.done = True
+            return
             
     def _calc_score(self, player):
         state = self.state * player
@@ -104,12 +107,11 @@ class Observer():
     def options(self):
         return np.where(self._env.state.reshape(-1) == 0)[0]
 
-
     def state(self):
-        return self._env.state.reshape(-1)
+        return self._env.state.reshape(-1)    
     
-    def reward(self):
-        return self._env.reward[1]
+    def reward(self, player):
+        return self._env.reward[player]
     
     def done(self):
         return self._env.done
@@ -123,7 +125,7 @@ class Observer():
 
     def step(self, player, action):
         self._env.step(player, action % self._env.size, action // self._env.size)
-        return self.state(), self.reward(), self.done(), self.options()   
+        return self.state(), self.reward(player), self.done(), self.options()   
 
 
 # In[ ]:
