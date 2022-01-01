@@ -48,7 +48,7 @@
 | o | o | o | x | o |
 
 結果は`data/dnn`に格納した。  
-`先攻/後攻`  
+`人が先攻/人が後攻`  
 
 <img src="https://user-images.githubusercontent.com/32381339/147853998-98dbc2fa-7a12-45ac-b6ec-8b18ccbc70a4.png" width="400px"><img src="https://user-images.githubusercontent.com/32381339/147854034-d1ee4155-d8e6-44fe-8e3f-238f15d771a7.png" width="400px">
 
@@ -59,8 +59,8 @@
 | o | x | o | o | x |
 
 結果は`data/fn_q`に格納した。学習が全く安定しなかった。どちらも人の勝ち。  
-`先攻/後攻`
+`人が先攻/人が後攻`
 
-<img src="https://user-images.githubusercontent.com/32381339/147847523-26bb7aa3-e272-4e32-9238-e5619d16ab00.png" width="400px"><img src="https://user-images.githubusercontent.com/32381339/147847268-3aee0db4-7e8f-47a3-8db3-ec6fc9ce7eca.png" width="400px">
+<img src="https://user-images.githubusercontent.com/32381339/147847268-3aee0db4-7e8f-47a3-8db3-ec6fc9ce7eca.png" width="400px"><img src="https://user-images.githubusercontent.com/32381339/147847523-26bb7aa3-e272-4e32-9238-e5619d16ab00.png" width="400px">
 
 
