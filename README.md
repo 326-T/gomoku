@@ -39,7 +39,7 @@
 | ---- | ---- | ---- | ---- | ---- |
 | o | x | o | x | o |
 
-結果は`data/fa`に格納した。どちらも人の勝利  
+結果は`data/fn`に格納した。どちらも人の勝利  
 `人が先攻/人が後攻`  
 
 <img src="https://user-images.githubusercontent.com/32381339/147854179-58a7c224-3464-42fb-8f94-90a81b31d260.png" width="400px"><img src="https://user-images.githubusercontent.com/32381339/147854138-31c045ee-c403-42dc-a868-944ed4a05de8.png" width="400px">
