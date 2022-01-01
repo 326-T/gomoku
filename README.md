@@ -55,10 +55,9 @@
 | ---- | ---- | ---- | ---- | ---- |
 | o | x | o | o | x |
 
-結果は`data/fn_q`に格納した。学習が全く安定しなかった。先攻後攻どちらも人の勝ち。  
-`先攻`
-![image](https://user-images.githubusercontent.com/32381339/147847249-d32b0eb8-a5af-4652-a790-dbd64990c34f.png)
-`後攻`
-![image](https://user-images.githubusercontent.com/32381339/147847268-3aee0db4-7e8f-47a3-8db3-ec6fc9ce7eca.png)
+結果は`data/fn_q`に格納した。学習が全く安定しなかった。どちらも人の勝ち。  
+`先攻/後攻`
+
+<img src="https://user-images.githubusercontent.com/32381339/147847523-26bb7aa3-e272-4e32-9238-e5619d16ab00.png" width="450px"><img src="https://user-images.githubusercontent.com/32381339/147847268-3aee0db4-7e8f-47a3-8db3-ec6fc9ce7eca.png" width="450px">
 
 
