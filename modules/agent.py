@@ -44,7 +44,7 @@ class FNAgent():
             estimates = self.estimate(state)[0]
             return self._choice_from_options(estimates, options)
 
-    def replay(self, experiences, gamma=0.9, batch_size=128, epoch=2):
+    def replay(self, experiences, gamma=0.9, batch_size=128, max_epoch=2):
         states = np.vstack([e.s for e in experiences])
         next_states = np.vstack([e.n_s for e in experiences])
 
@@ -58,7 +58,7 @@ class FNAgent():
             estimateds[i][e.a] = reward
 
         x = self._append_turn(states)
-        loss = self.model.train(x , estimateds, batch_size, epoch)
+        loss = self.model.train(x , estimateds, batch_size, max_epoch)
         return loss
     
     def _choice_from_options(self, estimates, options):
@@ -97,7 +97,7 @@ class FNQAgent(FNAgent):
             max_id = np.argmax([self.estimate(state, option)[0] for option in options])
             return options[max_id]
 
-    def replay(self, experiences, gamma=0.9, batch_size=128, epoch=2):
+    def replay(self, experiences, gamma=0.9, batch_size=128, max_epoch=2):
         states = np.array([e.s for e in experiences])
         actions = np.array([e.a for e in experiences])
 
@@ -110,7 +110,7 @@ class FNQAgent(FNAgent):
             estimateds[i][0] = reward
 
         x = self._append_turn_action(states, actions)
-        loss = self.model.train(x, estimateds, batch_size, epoch)
+        loss = self.model.train(x, estimateds, batch_size, max_epoch)
         return loss
     
     def _append_turn_action(self, state, action):
@@ -156,28 +156,29 @@ class DNAgent():
             estimates = self.estimate(state)[0]
             return self._choice_from_options(estimates, options)
 
-    def replay(self, experiences, gamma=0.9, batch_size=128, epoch=2):
+    def replay(self, experiences, gamma=0.9, batch_size=128, max_epoch=2):
         loss = 0
-        dataset = NumpyDataset(experiences, batch_size)
-        for es in dataset:
-            states = np.array([e.s for e in es])
-            next_states = np.array([e.n_s for e in es])
-            actions = np.array([e.a for e in es])
+        for epoch in range(max_epoch):
+            dataset = NumpyDataset(experiences, batch_size)
+            for es in dataset:
+                states = np.array([e.s for e in es])
+                next_states = np.array([e.n_s for e in es])
+                actions = np.array([e.a for e in es])
 
-            estimateds = self.estimate(states)
-            future = self.estimate(next_states, use_target=True)
+                estimateds = self.estimate(states)
+                future = self.estimate(next_states, use_target=True)
 
-            for i, e in enumerate(es):
-                reward = e.r
-                if not e.d:
-                    reward += gamma * np.max(future[i])
-                estimateds[i][e.a] = reward
+                for i, e in enumerate(es):
+                    reward = e.r
+                    if not e.d:
+                        reward += gamma * np.max(future[i])
+                    estimateds[i][e.a] = reward
 
-            x = self._append_turn(states)
-            loss += self.model.train(x, estimateds, batch_size, epoch)
+                x = self._append_turn(states)
+                loss += self.model.train(x, estimateds, batch_size, 1)
 
         self._hard_copy()
-        return loss / len(dataset)
+        return loss / (len(dataset) * max_epoch)
     
     def _choice_from_options(self, estimates, options):
         index = np.argmax(estimates[options])
@@ -220,26 +221,27 @@ class DNQAgent(DNAgent):
             max_id = np.argmax([self.estimate(state, option)[0] for option in options])
             return options[max_id]
 
-    def replay(self, experiences, gamma=0.9, batch_size=128, epoch=2):
+    def replay(self, experiences, gamma=0.9, batch_size=128, max_epoch=2):
         loss = 0
-        dataset = NumpyDataset(experiences, batch_size)
-        for es in dataset:
-            states = np.array([e.s for e in es])
-            actions = np.array([e.a for e in es])
+        for i in range(max_epoch):
+            dataset = NumpyDataset(experiences, batch_size)
+            for es in dataset:
+                states = np.array([e.s for e in es])
+                actions = np.array([e.a for e in es])
 
-            estimateds = np.zeros([states.shape[0], 1])
+                estimateds = np.zeros([states.shape[0], 1])
 
-            for i, e in enumerate(es):
-                reward = e.r
-                if not e.d:
-                    reward += gamma * np.max([self.estimate(e.n_s, o, use_target=True) for o in e.n_o])
-                estimateds[i][0] = reward
+                for i, e in enumerate(es):
+                    reward = e.r
+                    if not e.d:
+                        reward += gamma * np.max([self.estimate(e.n_s, o, use_target=True) for o in e.n_o])
+                    estimateds[i][0] = reward
 
-            x = self._append_turn_action(states, actions)
-            loss += self.model.train(x, estimateds, batch_size, epoch)
+                x = self._append_turn_action(states, actions)
+                loss += self.model.train(x, estimateds, batch_size, 1)
 
         self._hard_copy()
-        return loss / len(dataset)
+        return loss / (len(dataset) * max_epoch)
     
     def _append_turn_action(self, state, action):
         if state.ndim == 1:
