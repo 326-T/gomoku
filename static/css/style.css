@@ -77,6 +77,11 @@ button {
   background-color: green;
 }
 
+.circle.light_green {
+  border: lightgreen;
+  background-color: lightgreen;
+}
+
 .circle.white {
   border: white;
   background-color: white;
