@@ -217,7 +217,8 @@ class Observer():
         self._env.render()
 
     def step(self, player, action):
-        self._env.step(player, action % self._env.size, action // self._env.size)
+        if action is not None:
+            self._env.step(player, action % self._env.size, action // self._env.size)
         return self.state(), self.reward(player), self.done(), self.options()   
 
 
