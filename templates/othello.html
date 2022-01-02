@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+  <div id="container">
+    <h1 class="title" style="padding-top: 2rem;">オセロ</h1>
+    <div id="field">
+      <div class="base">
+        <table>
+          {% for row in state %}
+          <tr>
+            {% for column in row %}
+            <td><div class="circle green"></div></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div id="info">
+        <h1 class="title" style="margin-top: 8rem;">{{ result }}</h1>
+        <br>
+        <form action="/othello" method="GET">
+          <button>リセット</button>      
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script>
+  var $tableElements = document.getElementsByTagName('td');
+  var state = {{ state | tojson}};
+  var options = {{ options | tojson}};
+  var order = {{ order | tojson}};
+
+  window.onload = () => {
+    for (let $i=0; $i < $tableElements.length; $i++) {
+      $tableElements[$i].addEventListener('click', async (e) => {
+        let tableElements = [].slice.call($tableElements);
+        let index = tableElements.indexOf(e.currentTarget);
+        if (!(options.includes(index))) {
+          window.alert("そこには置けません");
+          return;
+        }
+        putStone(index, order)
+        postAction(index)
+      })
+      putStone($i, state[Math.trunc($i / state.length)][$i % state.length]);
+    }
+    for (let $i=0; $i < options.length; $i++) {
+      putStone(options[$i], 2);
+    }
+  }
+
+  function putStone(index, order) {
+    var target = $tableElements[index].children[0];
+    if (order === 1) {
+      $(target).removeClass("green").addClass("white");
+    }
+    else if (order === -1) {
+      $(target).removeClass("green").addClass("black");
+    }
+    else if (order === 2) {
+      $(target).removeClass("green").addClass("light_green")
+    }
+    else {
+      $(target).addClass("green");
+    }
+  }
+
+  function postAction(action) {
+    var form = document.createElement('form');
+    var request = document.createElement('input');
+ 
+    form.method = 'POST';
+    form.action = 'http://localhost:5000/othello';
+ 
+    request.type = 'hidden'; //入力フォームが表示されないように
+    request.name = 'text';
+    request.value = action;
+    request.name = 'action'
+ 
+    form.appendChild(request);
+    document.body.appendChild(form);
+ 
+    form.submit();
+  }
+</script>
