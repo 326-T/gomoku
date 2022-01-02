@@ -29,6 +29,9 @@
  
 - オセロなら以下にアクセスする。  
   http://localhost:5000/othello
+
+<img src="https://user-images.githubusercontent.com/32381339/147877437-6109c1db-a38f-47d4-9c7c-0d114b415a93.png" width=400px>
+
   
 ## 三目並べ
 - 先攻後攻はランダム
@@ -80,4 +83,7 @@
 `人が先攻/人が後攻`  
 
 <img src="https://user-images.githubusercontent.com/32381339/147854289-3f6972c2-53dc-475e-b8d0-561bc50d7b61.png" width="400px"><img src="https://user-images.githubusercontent.com/32381339/147854269-a1766141-a281-4843-8422-23136fd3976c.png" width="400px">
+
+## オセロ
+1エピソードが長すぎて学習に時間がかかる。
 
