@@ -34,7 +34,7 @@ class FNAgent():
         return agent
 
     def estimate(self, state):
-        x = self._append_color(state)
+        x = self._append_turn(state)
         return self.model.predict(x).detach().numpy()
         
     def policy(self, state, options):
@@ -44,7 +44,7 @@ class FNAgent():
             estimates = self.estimate(state)[0]
             return self._choice_from_options(estimates, options)
 
-    def replay(self, experiences, gamma=0.9, batch_size=128, epoch=2):
+    def replay(self, experiences, gamma=0.9, batch_size=128, max_epoch=2):
         states = np.vstack([e.s for e in experiences])
         next_states = np.vstack([e.n_s for e in experiences])
 
@@ -57,23 +57,70 @@ class FNAgent():
                 reward += gamma * np.max(future[i])
             estimateds[i][e.a] = reward
 
-        estimateds = np.array(estimateds)
-        x = self._append_color(states)
-        loss = self.model.train(x , estimateds, batch_size, epoch)
+        x = self._append_turn(states)
+        loss = self.model.train(x , estimateds, batch_size, max_epoch)
         return loss
     
     def _choice_from_options(self, estimates, options):
         index = np.argmax(estimates[options])
         return options[index]
     
-    def _append_color(self, state):
+    def _append_turn(self, state):
         if state.ndim == 1:
             return np.block([state, self.color])
         else:
             return np.block([state, np.ones([state.shape[0], 1]) * self.color])
 
-
 # In[3]:
+
+
+class FNQAgent(FNAgent):
+
+    def __init__(self, epsilon):
+        super().__init__(epsilon)
+        self.max_action = 1
+
+    @classmethod
+    def load(cls, model, max_action, epsilon=0.1):
+        agent = super().load(cls, model, epsilon)
+        agent.max_action = max_action
+        return agent
+
+    def estimate(self, state, action):
+        x = self._append_turn_action(state, action)
+        return self.model.predict(x).detach().numpy()
+        
+    def policy(self, state, options):
+        if np.random.random() < self.epsilon or not self.initialized:
+            return np.random.choice(options, 1)[0]
+        else:
+            max_id = np.argmax([self.estimate(state, option)[0] for option in options])
+            return options[max_id]
+
+    def replay(self, experiences, gamma=0.9, batch_size=128, max_epoch=2):
+        states = np.array([e.s for e in experiences])
+        actions = np.array([e.a for e in experiences])
+
+        estimateds = np.zeros([states.shape[0], 1])
+
+        for i, e in enumerate(experiences):
+            reward = e.r
+            if not e.d:
+                reward += gamma * np.max([self.estimate(e.n_s, o) for o in e.n_o])
+            estimateds[i][0] = reward
+
+        x = self._append_turn_action(states, actions)
+        loss = self.model.train(x, estimateds, batch_size, max_epoch)
+        return loss
+    
+    def _append_turn_action(self, state, action):
+        if state.ndim == 1:
+            return np.block([state, self.color, action / self.max_action])
+        else:
+            return np.block([state, np.ones([state.shape[0], 1]) * self.color, action.reshape(-1, 1) / self.max_action])
+
+
+# In[4]:
 
 
 class DNAgent():
@@ -88,15 +135,16 @@ class DNAgent():
         self.color = 1
 
     @classmethod
-    def load(cls, model, target, epsilon=0.1):
+    def load(cls, model, target, max_action, epsilon=0.1):
         agent = cls(epsilon)
         agent.model = model
         agent.target = target
+        agent.max_action = max_action
         agent.initialized = True
         return agent
 
     def estimate(self, state, use_target=False):
-        x = self._append_color(state)
+        x = self._append_turn(state)
         if use_target:
             return self.target.predict(x).detach().numpy()
         return self.model.predict(x).detach().numpy()
@@ -108,34 +156,35 @@ class DNAgent():
             estimates = self.estimate(state)[0]
             return self._choice_from_options(estimates, options)
 
-    def replay(self, experiences, gamma=0.9, batch_size=128, epoch=2):
+    def replay(self, experiences, gamma=0.9, batch_size=128, max_epoch=2):
         loss = 0
-        dataset = NumpyDataset(experiences, batch_size)
-        for es in dataset:
-            states = np.array([e.s for e in es])
-            next_states = np.array([e.n_s for e in es])
+        for epoch in range(max_epoch):
+            dataset = NumpyDataset(experiences, batch_size)
+            for es in dataset:
+                states = np.array([e.s for e in es])
+                next_states = np.array([e.n_s for e in es])
+                actions = np.array([e.a for e in es])
 
-            estimateds = self.estimate(states)
-            future = self.estimate(next_states, use_target=True)
+                estimateds = self.estimate(states)
+                future = self.estimate(next_states, use_target=True)
 
-            for i, e in enumerate(es):
-                reward = e.r
-                if not e.d:
-                    reward += gamma * np.max(future[i])
-                estimateds[i][e.a] = reward
+                for i, e in enumerate(es):
+                    reward = e.r
+                    if not e.d:
+                        reward += gamma * np.max(future[i])
+                    estimateds[i][e.a] = reward
 
-            estimateds = np.array(estimateds)
-            x = self._append_color(states)
-            loss += self.model.train(x, estimateds, batch_size, epoch)
+                x = self._append_turn(states)
+                loss += self.model.train(x, estimateds, batch_size, 1)
 
         self._hard_copy()
-        return loss / len(dataset)
+        return loss / (len(dataset) * max_epoch)
     
     def _choice_from_options(self, estimates, options):
         index = np.argmax(estimates[options])
         return options[index]
     
-    def _append_color(self, state):
+    def _append_turn(self, state):
         if state.ndim == 1:
             return np.block([state, self.color])
         else:
@@ -144,7 +193,66 @@ class DNAgent():
     def _hard_copy(self):
         self.target.model.load_state_dict(self.model.model.state_dict())
 
-# In[4]:
+# In[5]:
+
+
+class DNQAgent(DNAgent):
+
+    def __init__(self, epsilon):
+        super().__init__(epsilon)
+        self.max_action = 1
+
+    @classmethod
+    def load(cls, model, target, max_action, epsilon=0.1):
+        agent = super().load(model, target, epsilon)
+        agent.max_action = max_action
+        return agent
+
+    def estimate(self, state, action, use_target=False):
+        x = self._append_turn_action(state, action)
+        if use_target:
+            return self.target.predict(x).detach().numpy()
+        return self.model.predict(x).detach().numpy()
+        
+    def policy(self, state, options):
+        if np.random.random() < self.epsilon or not self.initialized:
+            return np.random.choice(options, 1)[0]
+        else:
+            max_id = np.argmax([self.estimate(state, option)[0] for option in options])
+            return options[max_id]
+
+    def replay(self, experiences, gamma=0.9, batch_size=128, max_epoch=2):
+        loss = 0
+        for i in range(max_epoch):
+            dataset = NumpyDataset(experiences, batch_size)
+            for es in dataset:
+                states = np.array([e.s for e in es])
+                actions = np.array([e.a for e in es])
+
+                estimateds = np.zeros([states.shape[0], 1])
+
+                for i, e in enumerate(es):
+                    reward = e.r
+                    if not e.d:
+                        reward += gamma * np.max([self.estimate(e.n_s, o, use_target=True) for o in e.n_o])
+                    estimateds[i][0] = reward
+
+                x = self._append_turn_action(states, actions)
+                loss += self.model.train(x, estimateds, batch_size, 1)
+
+        self._hard_copy()
+        return loss / (len(dataset) * max_epoch)
+    
+    def _append_turn_action(self, state, action):
+        if state.ndim == 1:
+            return np.block([state, self.color, action / self.max_action])
+        else:
+            return np.block([state, np.ones([state.shape[0], 1]) * self.color, action.reshape(-1, 1) / self.max_action])
+
+    def _hard_copy(self):
+        self.target.model.load_state_dict(self.model.model.state_dict())
+
+# In[6]:
 
 
 class NumpyDataset():

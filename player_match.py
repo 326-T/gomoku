@@ -13,7 +13,7 @@ import numpy as np
 
 from modules.model import FCNN, FCNN_controller
 from modules.env import Gomoku, Observer
-from modules.agent import DNAgent, FNAgent
+from modules.agent import DNAgent, DNQAgent, FNAgent
 
 
 # In[3]:
@@ -77,10 +77,10 @@ class Refree:
 
 def init_refree():
     env = Observer.load(Gomoku(3))
-    fcnn = FCNN(env.dim_state+1, env.dim_action)
+    fcnn = FCNN(env.dim_state+2, 1)
     model = FCNN_controller(fcnn)
-    model.load_weight("data/dnn/1_model_fcnn")
-    agent = DNAgent.load(model, None, 0)
+    model.load_weight("data/dnn_q/2_model_fcnn")
+    agent = DNQAgent.load(model, None, 0)
     
     refree = Refree.load(env, agent)
     refree.reset()
