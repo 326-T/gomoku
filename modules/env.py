@@ -8,6 +8,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
 # In[2]:
 
 
@@ -84,7 +85,8 @@ class Gomoku:
         plt.show()
         plt.close()
 
-# In[3]:
+
+# In[ ]:
 
 
 class Othello:
@@ -179,7 +181,8 @@ class Othello:
         plt.show()
         plt.close()
 
-# In[4]:
+
+# In[3]:
 
 
 class Observer():
@@ -219,10 +222,10 @@ class Observer():
     def step(self, player, action):
         if action is not None:
             self._env.step(player, action % self._env.size, action // self._env.size)
-        return self.state(), self.reward(player), self.done(), self.options()   
+        return self.state(), self.reward(player), self.done(), self.options()
 
 
-# In[5]:
+# In[ ]:
 
 
 class OthelloObserver(Observer):
@@ -244,5 +247,4 @@ class OthelloObserver(Observer):
         if action is not None:
             self._env.step(player, action % self._env.size, action // self._env.size)
         return self.state(), self.reward(player), self.done(), self.options(player*-1)   
-
 

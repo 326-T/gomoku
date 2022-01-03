@@ -17,14 +17,14 @@ import matplotlib.pyplot as plt
 
 
 from modules.model import FCNN, FCNN_controller
-from modules.env import Gomoku, Observer, Othello, OthelloObserver
-from modules.agent import DNAgent, DNQAgent, FNAgent
+from modules.env import Gomoku, Observer
+from modules.agent import FNAgent
 
 
 # In[3]:
 
 
-Experience = namedtuple("Experience", ["s", "a", "r", "n_s", "n_o", "d"])
+Experience = namedtuple("Experience", ["s", "a", "r", "n_s", "d"])
 
 
 # In[4]:
@@ -166,7 +166,7 @@ def train_more(generation=1):
     trainer.logger.render("data/gomoku/fn/"+str(i+1)+"_reward_loss.png")
 
 
-# In[8]:
+# In[ ]:
 
 
 def train_DNN():
@@ -181,7 +181,7 @@ def train_DNN():
     trainer.logger.render("data/gomoku/dnn/0_reward_loss.png")
 
 
-# In[9]:
+# In[ ]:
 
 
 def train_more_DNN(generation=1):
@@ -203,7 +203,7 @@ def train_more_DNN(generation=1):
     trainer.logger.render("data/gomoku/dnn/"+str(i+1)+"_reward_loss.png")
 
 
-# In[10]:
+# In[ ]:
 
 
 def train_Othello_DNN():
@@ -218,7 +218,7 @@ def train_Othello_DNN():
     trainer.logger.render("data/othello/dnn/0_reward_loss.png")
 
 
-# In[11]:
+# In[ ]:
 
 
 def train_more_Othello_DNN(generation=1):
@@ -239,7 +239,8 @@ def train_more_Othello_DNN(generation=1):
     agent.model.save_weight("data/othello/dnn/"+str(i+1)+"_model_fcnn")
     trainer.logger.render("data/othello/dnn/"+str(i+1)+"_reward_loss.png")
 
-# In[12]:
+
+# In[8]:
 
 
 if __name__ == "__main__":

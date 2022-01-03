@@ -71,7 +71,8 @@ class FNAgent():
         else:
             return np.block([state, np.ones([state.shape[0], 1]) * self.color])
 
-# In[3]:
+
+# In[ ]:
 
 
 class FNQAgent(FNAgent):
@@ -120,7 +121,7 @@ class FNQAgent(FNAgent):
             return np.block([state, np.ones([state.shape[0], 1]) * self.color, action.reshape(-1, 1) / self.max_action])
 
 
-# In[4]:
+# In[ ]:
 
 
 class DNAgent():
@@ -193,7 +194,8 @@ class DNAgent():
     def _hard_copy(self):
         self.target.model.load_state_dict(self.model.model.state_dict())
 
-# In[5]:
+
+# In[ ]:
 
 
 class DNQAgent(DNAgent):
@@ -252,7 +254,8 @@ class DNQAgent(DNAgent):
     def _hard_copy(self):
         self.target.model.load_state_dict(self.model.model.state_dict())
 
-# In[6]:
+
+# In[ ]:
 
 
 class NumpyDataset():
@@ -277,7 +280,11 @@ class NumpyDataset():
         return self.size
 
 
+# In[ ]:
+
+
 if __name__ == "__main__":
     a = np.arange(12).reshape(3,4).tolist()
     for i in NumpyDataset(a, 2):
         print(i)
+

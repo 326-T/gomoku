@@ -12,8 +12,8 @@ import numpy as np
 
 
 from modules.model import FCNN, FCNN_controller
-from modules.env import Gomoku, Observer, Othello, OthelloObserver
-from modules.agent import DNAgent, DNQAgent, FNAgent
+from modules.env import Gomoku, Observer
+from modules.agent import FNAgent
 
 
 # In[3]:
@@ -92,6 +92,9 @@ def init_gomoku_refree():
     return refree
 
 
+# In[ ]:
+
+
 def init_othello_refree():
     env = OthelloObserver.load(Othello())
     agent = DNQAgent(0)
@@ -101,11 +104,13 @@ def init_othello_refree():
     
     return refree
 
+
 # In[5]:
 
 
 gomoku_refree = init_gomoku_refree()
 othello_refree = init_othello_refree()
+
 
 # In[6]:
 
@@ -141,7 +146,8 @@ def othello_post():
         othello_refree.agent_turn()
     return render_template("othello.html", state=othello_refree.env.state().reshape(8, 8).tolist(), options=othello_refree.options.tolist(), 
     order=othello_refree.player_ids["player"], result=othello_refree.result)
-    
+
+
 # In[ ]:
 
 

@@ -4,7 +4,6 @@
 # In[1]:
 
 
-from typing import Generator
 import numpy as np
 import torch
 from torch import nn, optim
@@ -102,3 +101,4 @@ class GomokuDataset(Dataset):
     
     def __getitem__(self, idx):
         return self.x[idx], self.y[idx]
+
