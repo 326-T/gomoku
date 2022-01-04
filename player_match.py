@@ -12,8 +12,8 @@ import numpy as np
 
 
 from modules.model import FCNN, FCNN_controller
-from modules.env import Gomoku, Observer
-from modules.agent import FNAgent
+from modules.env import Gomoku, Observer, Othello, OthelloObserver
+from modules.agent import FNAgent, DNAgent, DNQAgent
 
 
 # In[3]:
@@ -51,27 +51,38 @@ class Refree:
             self.agent_turn()
             
     def agent_turn(self):
-        if self.done or self.is_player_turn:
+        if self.done:
+            return
+        if len(self.options) == 0:
             self.state, reward, self.done, self.options = self.env.step(self.player_ids["agent"], None)
             return
-        action = self.agent.policy(self.state, self.options)
-        self.state, reward, self.done, self.options = self.env.step(self.player_ids["agent"], action)
-        if len(self.options) != 0:
-            self.is_player_turn = True
-        if reward == 1:
-            self.result = "負け"
-        elif reward == -0.3:
-            self.result = "引き分け"
-        
+        while True:
+            action = self.agent.policy(self.state, self.options)
+            self.state, reward, self.done, self.options = self.env.step(self.player_ids["agent"], action)
+            if reward == -1:
+                self.result = "勝ち"
+                return
+            elif reward == 1:
+                self.result = "負け"
+                return
+            elif reward == -0.3:
+                self.result = "引き分け"
+                return
+            if len(self.options) == 0:
+                self.state, reward, self.done, self.options = self.env.step(self.player_ids["player"], None)
+            else:
+                self.is_player_turn = True
+                return
+            
     def player_turn(self, action):
-        if self.done or not self.is_player_turn:
-            self.state, reward, self.done, self.options = self.env.step(self.player_ids["player"], None)
+        if self.done:
             return
         self.state, reward, self.done, self.options = self.env.step(self.player_ids["player"], action)
-        if len(self.options) != 0:
-            self.is_player_turn = False
+        self.is_player_turn = False
         if reward == 1:
             self.result = "勝ち"
+        elif reward == -1:
+            self.result = "負け"
         elif reward == -0.3:
             self.result = "引き分け"
 
@@ -92,7 +103,7 @@ def init_gomoku_refree():
     return refree
 
 
-# In[ ]:
+# In[5]:
 
 
 def init_othello_refree():
@@ -105,14 +116,14 @@ def init_othello_refree():
     return refree
 
 
-# In[5]:
+# In[6]:
 
 
 gomoku_refree = init_gomoku_refree()
 othello_refree = init_othello_refree()
 
 
-# In[6]:
+# In[7]:
 
 
 app = Flask(__name__)
@@ -142,8 +153,7 @@ def othello_get():
 def othello_post():
     action = int(request.form.get("action"))
     othello_refree.player_turn(action)
-    while not othello_refree.is_player_turn:
-        othello_refree.agent_turn()
+    othello_refree.agent_turn()
     return render_template("othello.html", state=othello_refree.env.state().reshape(8, 8).tolist(), options=othello_refree.options.tolist(), 
     order=othello_refree.player_ids["player"], result=othello_refree.result)
 

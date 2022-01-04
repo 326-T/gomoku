@@ -17,14 +17,14 @@ import matplotlib.pyplot as plt
 
 
 from modules.model import FCNN, FCNN_controller
-from modules.env import Gomoku, Observer
-from modules.agent import FNAgent
+from modules.env import Gomoku, Observer, Othello, OthelloObserver
+from modules.agent import FNAgent, DNAgent, DNQAgent
 
 
 # In[3]:
 
 
-Experience = namedtuple("Experience", ["s", "a", "r", "n_s", "d"])
+Experience = namedtuple("Experience", ["s", "a", "r", "n_s", "n_o", "d"])
 
 
 # In[4]:
@@ -71,16 +71,15 @@ class Trainer():
                 opponent.turn = -1
             
             while not done:
-                if len(options) == 0:
+                if len(options) != 0:
                     action = agent.policy(state, options)
                     next_state, reward, done, next_options = env.step(agent.turn, action)
                     acted = True
                 else:
                     next_state, reward, done, next_options = env.step(agent.turn, None)
-                    acted = False
 
                 if not done:
-                    if len(options) == 0:
+                    if len(next_options) != 0:
                         opponent_action = opponent.policy(next_state, next_options)
                         next_state, reward, done, next_options = env.step(opponent.turn, opponent_action)
                     else: 
@@ -88,10 +87,11 @@ class Trainer():
 
                     reward = env.reward(agent.turn)
     
-                if acted:
+                if acted and len(next_options) != 0:
                     e = Experience(state, action, reward, next_state, next_options, done)
                     self.experiences.append(e)
                     self.training_count += 1
+                    acted = False
     
                 if self.training_count == self.buffer_size:
                     loss = agent.replay(self.experiences, self.gamma, self.batch_size, self.epoch)
@@ -100,7 +100,8 @@ class Trainer():
 
                 state = next_state
                 options = next_options
-            # if i % 5000 == 0:
+            if i % 100 == 0:
+                print(i)
             #     env.render()
             self.logger.reward.append(reward)
 
@@ -166,7 +167,7 @@ def train_more(generation=1):
     trainer.logger.render("data/gomoku/fn/"+str(i+1)+"_reward_loss.png")
 
 
-# In[ ]:
+# In[8]:
 
 
 def train_DNN():
@@ -181,7 +182,7 @@ def train_DNN():
     trainer.logger.render("data/gomoku/dnn/0_reward_loss.png")
 
 
-# In[ ]:
+# In[9]:
 
 
 def train_more_DNN(generation=1):
@@ -203,7 +204,7 @@ def train_more_DNN(generation=1):
     trainer.logger.render("data/gomoku/dnn/"+str(i+1)+"_reward_loss.png")
 
 
-# In[ ]:
+# In[10]:
 
 
 def train_Othello_DNN():
@@ -218,7 +219,7 @@ def train_Othello_DNN():
     trainer.logger.render("data/othello/dnn/0_reward_loss.png")
 
 
-# In[ ]:
+# In[11]:
 
 
 def train_more_Othello_DNN(generation=1):
@@ -240,7 +241,7 @@ def train_more_Othello_DNN(generation=1):
     trainer.logger.render("data/othello/dnn/"+str(i+1)+"_reward_loss.png")
 
 
-# In[8]:
+# In[ ]:
 
 
 if __name__ == "__main__":

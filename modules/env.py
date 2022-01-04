@@ -86,7 +86,7 @@ class Gomoku:
         plt.close()
 
 
-# In[ ]:
+# In[3]:
 
 
 class Othello:
@@ -112,6 +112,14 @@ class Othello:
                 for reversible_stone in reversible_line:
                     self.state[reversible_stone["y"]][reversible_stone["x"]] = player
         self._judge()
+    
+    def options(self, player):
+        options = []
+        for x in range(self.size):
+            for y in range(self.size):
+                if len(self._check_reversible_lines(player, x, y)) > 0:
+                    options.append(self.size * y + x)
+        return np.array(options)
     
     def _check_reversible_lines(self, player, x, y):
         if self.state[y][x] != 0:
@@ -140,15 +148,8 @@ class Othello:
         return []
 
     def _judge(self):
-        if not (True in (self.state.reshape(-1)==1)):
-            self._set_reward(-1)
-            return
-            
-        if not (True in (self.state.reshape(-1)==-1)):
-            self._set_reward(1)
-            return
-
-        if not (True in (self.state.reshape(-1)==0)):
+        
+        if not (True in (self.state.reshape(-1)==0)) or (len(self.options(1)) == 0 and len(self.options(-1)) == 0):
             first = np.count_nonzero(self.state.reshape(-1)==1)
             second = np.count_nonzero(self.state.reshape(-1)==-1)
             if first > second:
@@ -182,7 +183,7 @@ class Othello:
         plt.close()
 
 
-# In[3]:
+# In[4]:
 
 
 class Observer():
@@ -225,18 +226,13 @@ class Observer():
         return self.state(), self.reward(player), self.done(), self.options()
 
 
-# In[ ]:
+# In[5]:
 
 
 class OthelloObserver(Observer):
 
     def options(self, player):
-        options = []
-        for x in range(self._env.size):
-            for y in range(self._env.size):
-                if len(self._env._check_reversible_lines(player, x, y)) > 0:
-                    options.append(self._env.size * y + x)
-        return np.array(options)
+        return self._env.options(player)
 
 
     def reset(self):
