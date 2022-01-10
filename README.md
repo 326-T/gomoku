@@ -94,4 +94,6 @@
 | o | o | o | o | x |
 
 結果は`data/othello/dnn`に格納した。
+エージェントが先攻時でも人には勝てなかった。
+
 <img src="https://user-images.githubusercontent.com/32381339/148741854-a7083d96-15ea-4603-a70f-21d57c292039.png" width="400px">
