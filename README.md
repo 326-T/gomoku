@@ -125,3 +125,17 @@
 
 <img src="https://user-images.githubusercontent.com/32381339/148741854-a7083d96-15ea-4603-a70f-21d57c292039.png" width="400px">
 
+
+学習の様子
+- 左：ロス
+- 右：報酬
+
+![0_reward_loss](https://user-images.githubusercontent.com/32381339/148749970-ef1ef529-aacc-4997-b68a-b2ee8f0dbe35.png)
+
+そもそも学習できてない。原因は以下が考えられる。
+- 状態が広すぎる
+- エピソードの終わり付近以外は報酬は0
+- 報酬がスパース過ぎること
+
+角や辺をとったときに中間報酬を与えることも有効かもしれない。再度学習させるだけの時間がないが。
+
