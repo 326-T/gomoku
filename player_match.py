@@ -16,7 +16,7 @@ from modules.env import Gomoku, Observer, Othello, OthelloObserver
 from modules.agent import FNAgent, DNAgent, DNQAgent
 
 
-# In[3]:
+# In[14]:
 
 
 class Refree:
@@ -87,14 +87,29 @@ class Refree:
             self.result = "引き分け"
 
 
-# In[4]:
+# In[15]:
 
 
 def init_gomoku_refree():
     env = Observer.load(Gomoku(3))
     fcnn = FCNN(env.dim_state+2, 1)
     model = FCNN_controller(fcnn)
-    model.load_weight("data/gomoku/dnn/10_model_fcnn")
+    model.load_weight("data/gomoku/dnn/0_model_fcnn")
+    agent = DNQAgent.load(model, None, 0)
+    refree = Refree.load(env, agent)
+    refree.reset()
+    
+    return refree
+
+
+# In[16]:
+
+
+def init_othello_refree():
+    env = OthelloObserver.load(Othello())
+    fcnn = FCNN(env.dim_state+2, 1, hidden_shape=[100, 50])
+    model = FCNN_controller(fcnn)
+    model.load_weight("data/othello/dnn/0_model_fcnn")
     agent = DNQAgent.load(model, None, 0)
     
     refree = Refree.load(env, agent)
@@ -103,27 +118,14 @@ def init_gomoku_refree():
     return refree
 
 
-# In[5]:
-
-
-def init_othello_refree():
-    env = OthelloObserver.load(Othello())
-    agent = DNQAgent(0)
-    
-    refree = Refree.load(env, agent)
-    refree.reset()
-    
-    return refree
-
-
-# In[6]:
+# In[17]:
 
 
 gomoku_refree = init_gomoku_refree()
 othello_refree = init_othello_refree()
 
 
-# In[7]:
+# In[18]:
 
 
 app = Flask(__name__)

@@ -83,7 +83,7 @@ class FNQAgent(FNAgent):
 
     @classmethod
     def load(cls, model, max_action, epsilon=0.1):
-        agent = super().load(cls, model, epsilon)
+        agent = super().load(model, epsilon)
         agent.max_action = max_action
         return agent
 

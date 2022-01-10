@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 from modules.model import FCNN, FCNN_controller
 from modules.env import Gomoku, Observer, Othello, OthelloObserver
-from modules.agent import FNAgent, DNAgent, DNQAgent
+from modules.agent import FNAgent, FNQAgent, DNAgent, DNQAgent
 
 
 # In[3]:
@@ -138,8 +138,8 @@ def train():
     env = Observer.load(Gomoku(3))
     trainer = Trainer()
     model = FCNN_controller(FCNN(env.dim_state+2, 1))
-    agent = FNAgent.load(model, env.dim_action)
-    opponent = FNAgent(0)
+    agent = FNQAgent.load(model, env.dim_action)
+    opponent = FNQAgent(0)
     trainer.train_loop(env, agent, opponent)
     agent.model.save_weight("data/gomoku/fn/0_model_fcnn")
     trainer.logger.render("data/gomoku/fn/0_reward_loss.png")
@@ -155,11 +155,11 @@ def train_more(generation=1):
     
     agent_model = FCNN_controller(FCNN(env.dim_state+2, 1))
     agent_model.load_weight("data/gomoku/fn/"+str(i)+"_model_fcnn")
-    agent = FNAgent.load(agent_model, env.dim_action)
+    agent = FNQAgent.load(agent_model, env.dim_action)
     
     opponent_model = FCNN_controller(FCNN(env.dim_state+2, 1))
     opponent_model.load_weight("data/gomoku/fn/"+str(i)+"_model_fcnn")
-    opponent = FNAgent.load(opponent_model, env.dim_action)
+    opponent = FNQAgent.load(opponent_model, env.dim_action)
     
     trainer.train_loop(env, agent, opponent)
     
@@ -241,13 +241,14 @@ def train_more_Othello_DNN(generation=1):
     trainer.logger.render("data/othello/dnn/"+str(i+1)+"_reward_loss.png")
 
 
-# In[ ]:
+# In[12]:
 
 
 if __name__ == "__main__":
-    train_Othello_DNN()
+    train()
     for i in range(10):
-        train_more_Othello_DNN(i)
+        train_more_DNN(i)
+        train_more(i)
 
 
 # In[ ]:
