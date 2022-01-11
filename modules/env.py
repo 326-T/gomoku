@@ -24,7 +24,7 @@ class Gomoku:
         self.state = np.zeros([self.size, self.size])
         self.done = False
         self.reward = {1:0, -1:0}
-        
+
     def step(self, player, x, y):
         if not self._check_action(player, x, y):
             return
@@ -89,6 +89,103 @@ class Gomoku:
 # In[3]:
 
 
+class Othello:
+    
+    def __init__(self, size=8):
+        self.size = size
+        self.dim_state = size ** 2
+        self.dim_action = size ** 2
+        self.reset()
+        
+    def reset(self):
+        self.state = np.zeros([self.size, self.size])
+        self.state[self.size//2-1][self.size//2-1], self.state[self.size//2][self.size//2] = 1, 1
+        self.state[self.size//2][self.size//2-1], self.state[self.size//2-1][self.size//2] = -1, -1
+        self.done = False
+        self.reward = {1:0, -1:0}
+        
+    def step(self, player, x, y):
+        reversible_lines = self._check_reversible_lines(player, x, y)
+        if len(reversible_lines) != 0:
+            self.state[y][x] = player
+            for reversible_line in reversible_lines:
+                for reversible_stone in reversible_line:
+                    self.state[reversible_stone["y"]][reversible_stone["x"]] = player
+        self._judge()
+    
+    def options(self, player):
+        options = []
+        for x in range(self.size):
+            for y in range(self.size):
+                if len(self._check_reversible_lines(player, x, y)) > 0:
+                    options.append(self.size * y + x)
+        return np.array(options)
+    
+    def _check_reversible_lines(self, player, x, y):
+        if self.state[y][x] != 0:
+            return []
+        reversible_lines = []
+        for y_step in range(-1, 2):
+            for x_step in range(-1, 2):
+                stones = self._check_line(player, x, y, x_step, y_step)
+                if len(stones) > 0:
+                    reversible_lines.append(stones)
+        return reversible_lines
+
+ 
+    def _check_line(self, player, x, y, x_step, y_step):
+        target = {"x": x + x_step, "y": y + y_step}
+        reversible_line = []
+        while 0 <= target["x"] and target["x"] < self.size and 0 <= target["y"] and target["y"] < self.size:
+            if self.state[target["y"]][target["x"]] == 0:
+                return []
+            if self.state[target["y"]][target["x"]] == player:
+                return reversible_line
+            if self.state[target["y"]][target["x"]] == player * -1:
+                reversible_line.append(target.copy())
+            target["x"] += x_step
+            target["y"] += y_step
+        return []
+
+    def _judge(self):
+        
+        if not (True in (self.state.reshape(-1)==0)) or (len(self.options(1)) == 0 and len(self.options(-1)) == 0):
+            first = np.count_nonzero(self.state.reshape(-1)==1)
+            second = np.count_nonzero(self.state.reshape(-1)==-1)
+            if first > second:
+                self._set_reward(1)
+            elif first < second:
+                self._set_reward(-1)
+            else:
+                self.reward[1] = -0.3
+                self.reward[-1] = -0.3
+                self.done = True
+            return
+
+    def _set_reward(self, winner):
+        self.reward[winner] = 1
+        self.reward[winner * -1] = -1
+        self.done = True
+
+
+    def render(self):
+        plt.figure(figsize=(6,6))
+        plt.xlim([0, self.size])
+        plt.ylim([0, self.size])
+        plt.xticks(np.arange(self.size+1))
+        plt.yticks(np.arange(self.size+1))
+        plt.grid(which="major", color="black", alpha=0.5)
+        white = np.where(self.state == 1)
+        plt.scatter(white[1] + 0.5, white[0] + 0.5, color="white", s = 200, linewidths=2, ec="black")
+        black = np.where(self.state == -1)
+        plt.scatter(black[1] + 0.5, black[0] + 0.5, color="black", s = 200)
+        plt.show()
+        plt.close()
+
+
+# In[4]:
+
+
 class Observer():
 
     def __init__(self):
@@ -124,12 +221,26 @@ class Observer():
         self._env.render()
 
     def step(self, player, action):
-        self._env.step(player, action % self._env.size, action // self._env.size)
-        return self.state(), self.reward(player), self.done(), self.options()   
+        if action is not None:
+            self._env.step(player, action % self._env.size, action // self._env.size)
+        return self.state(), self.reward(player), self.done(), self.options()
 
 
-# In[ ]:
+# In[5]:
 
 
+class OthelloObserver(Observer):
 
+    def options(self, player):
+        return self._env.options(player)
+
+
+    def reset(self):
+        self._env.reset()
+        return self.state(), self.options(1)
+
+    def step(self, player, action):
+        if action is not None:
+            self._env.step(player, action % self._env.size, action // self._env.size)
+        return self.state(), self.reward(player), self.done(), self.options(player*-1)   
 

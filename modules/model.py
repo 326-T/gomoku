@@ -4,7 +4,6 @@
 # In[1]:
 
 
-from typing import Generator
 import numpy as np
 import torch
 from torch import nn, optim
@@ -35,8 +34,8 @@ class FCNN(nn.Module):
             for i in range(1, len(hidden_shape)):
                 self.model.add_module('fc'+str(i+1), nn.Linear(hidden_shape[i-1], hidden_shape[i]))
                 self.model.add_module('tanh'+str(i+1), nn.Tanh())
-            self.model.add_module('fc'+str(i+1), nn.Linear(hidden_shape[i], output_shape))
-            self.model.add_module('tanh'+str(i+1), nn.Tanh())
+            self.model.add_module('fc'+str(i+2), nn.Linear(hidden_shape[i], output_shape))
+            self.model.add_module('tanh'+str(i+2), nn.Tanh())
         
     def forward(self, x):
         x = x.view(-1, self.input_shape)
@@ -102,3 +101,4 @@ class GomokuDataset(Dataset):
     
     def __getitem__(self, idx):
         return self.x[idx], self.y[idx]
+

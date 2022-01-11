@@ -12,11 +12,11 @@ import numpy as np
 
 
 from modules.model import FCNN, FCNN_controller
-from modules.env import Gomoku, Observer
-from modules.agent import DNAgent, DNQAgent, FNAgent
+from modules.env import Gomoku, Observer, Othello, OthelloObserver
+from modules.agent import FNAgent, DNAgent, DNQAgent
 
 
-# In[3]:
+# In[14]:
 
 
 class Refree:
@@ -51,35 +51,65 @@ class Refree:
             self.agent_turn()
             
     def agent_turn(self):
-        if self.done or self.is_player_turn:
+        if self.done:
             return
-        action = self.agent.policy(self.state, self.options)
-        self.state, reward, self.done, self.options = self.env.step(self.player_ids["agent"], action)
-        self.is_player_turn = True
-        if reward == 1:
-            self.result = "負け"
-        elif reward == -0.3:
-            self.result = "引き分け"
-        
+        if len(self.options) == 0:
+            self.state, reward, self.done, self.options = self.env.step(self.player_ids["agent"], None)
+            return
+        while True:
+            action = self.agent.policy(self.state, self.options)
+            self.state, reward, self.done, self.options = self.env.step(self.player_ids["agent"], action)
+            if reward == -1:
+                self.result = "勝ち"
+                return
+            elif reward == 1:
+                self.result = "負け"
+                return
+            elif reward == -0.3:
+                self.result = "引き分け"
+                return
+            if len(self.options) == 0:
+                self.state, reward, self.done, self.options = self.env.step(self.player_ids["player"], None)
+            else:
+                self.is_player_turn = True
+                return
+            
     def player_turn(self, action):
-        if self.done or not self.is_player_turn:
+        if self.done:
             return
         self.state, reward, self.done, self.options = self.env.step(self.player_ids["player"], action)
         self.is_player_turn = False
         if reward == 1:
             self.result = "勝ち"
+        elif reward == -1:
+            self.result = "負け"
         elif reward == -0.3:
             self.result = "引き分け"
 
 
-# In[4]:
+# In[15]:
 
 
-def init_refree():
+def init_gomoku_refree():
     env = Observer.load(Gomoku(3))
     fcnn = FCNN(env.dim_state+2, 1)
     model = FCNN_controller(fcnn)
-    model.load_weight("data/dnn_q/2_model_fcnn")
+    model.load_weight("data/gomoku/dnn/0_model_fcnn")
+    agent = DNQAgent.load(model, None, 0)
+    refree = Refree.load(env, agent)
+    refree.reset()
+    
+    return refree
+
+
+# In[16]:
+
+
+def init_othello_refree():
+    env = OthelloObserver.load(Othello())
+    fcnn = FCNN(env.dim_state+2, 1, hidden_shape=[100, 50])
+    model = FCNN_controller(fcnn)
+    model.load_weight("data/othello/dnn/0_model_fcnn")
     agent = DNQAgent.load(model, None, 0)
     
     refree = Refree.load(env, agent)
@@ -88,31 +118,46 @@ def init_refree():
     return refree
 
 
-# In[5]:
+# In[17]:
 
 
-refree = init_refree()
+gomoku_refree = init_gomoku_refree()
+othello_refree = init_othello_refree()
 
 
-# In[6]:
+# In[18]:
 
 
 app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
 def root_get():
-    refree.reset()
-    return render_template("index.html", state=refree.env.state().reshape(3, 3).tolist(), options=refree.options.tolist(), 
-    order=refree.player_ids["player"], result=refree.result)
+    gomoku_refree.reset()
+    return render_template("index.html", state=gomoku_refree.env.state().reshape(3, 3).tolist(), options=gomoku_refree.options.tolist(), 
+    order=gomoku_refree.player_ids["player"], result=gomoku_refree.result)
 
 @app.route("/", methods=["POST"])
 def root_post():
     action = int(request.form.get("action"))
-    refree.player_turn(action)
-    refree.agent_turn()
-    return render_template("index.html", state=refree.env.state().reshape(3, 3).tolist(), options=refree.options.tolist(), 
-    order=refree.player_ids["player"], result=refree.result)
+    gomoku_refree.player_turn(action)
+    gomoku_refree.agent_turn()
+    return render_template("index.html", state=gomoku_refree.env.state().reshape(3, 3).tolist(), options=gomoku_refree.options.tolist(), 
+    order=gomoku_refree.player_ids["player"], result=gomoku_refree.result)
     
+
+@app.route("/othello", methods=["GET"])
+def othello_get():
+    othello_refree.reset()
+    return render_template("othello.html", state=othello_refree.env.state().reshape(8, 8).tolist(), options=othello_refree.options.tolist(), 
+    order=othello_refree.player_ids["player"], result=othello_refree.result)
+
+@app.route("/othello", methods=["POST"])
+def othello_post():
+    action = int(request.form.get("action"))
+    othello_refree.player_turn(action)
+    othello_refree.agent_turn()
+    return render_template("othello.html", state=othello_refree.env.state().reshape(8, 8).tolist(), options=othello_refree.options.tolist(), 
+    order=othello_refree.player_ids["player"], result=othello_refree.result)
 
 
 # In[ ]:
